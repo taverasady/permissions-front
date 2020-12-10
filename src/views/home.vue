@@ -54,13 +54,18 @@
         </b-overlay>
       </div>
     </div>
+    <EditModal @updated-permissions="getPermissionsAsync()"/>
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import EditModal from '@/components/edit-modal.vue';
 export default {
   name: "Home",
+  components: {
+    EditModal,
+  },
   data() {
     return {
       permissions: [],
@@ -92,7 +97,7 @@ export default {
   },
   methods: {
     toggleRequestModal(){
-      this.newRequestModalActive = !this.newRequestModalActive;
+      this.$bvModal.show('edit-modal');
     },
     async getPermissionsAsync() {
       this.isLoading = true;
@@ -107,43 +112,6 @@ export default {
           this.isLoading = false;
         });
     },
-    // TODO: Create async row insert function
-    async insertPermissionAsync(permission) {
-      this.isLoading = true;
-      await axios(`${process.env.VUE_APP_API_ROOT}/api/permit`, {
-        method: "POST",
-        data: permission,
-      })
-        .then((response) => {
-          console.log(response);
-        })
-        .catch((error) => {
-          console.error(error);
-        })
-        .finally(() => {
-          this.isLoading = false;
-          this.getPermissionsAsync();
-        });
-    },
-    // TODO: Create async row edit function
-    async editPermissionAsync(permission) {
-      this.isLoading = true;
-      await axios(`/api/permissions/${permission.id}`, {
-        method: "PUT",
-        data: permission,
-      })
-        .then((response) => {
-          console.log(response);
-        })
-        .catch((error) => {
-          console.error(error);
-        })
-        .finally(() => {
-          this.isLoading = false;
-          this.getPermissionsAsync();
-        });
-    },
-    // TODO: Create async row delete function
     async removePermissionAsync(permission) {
       this.isLoading = true;
       await axios(`${process.env.VUE_APP_API_ROOT}/api/permit/${permission.item.id}`, {
