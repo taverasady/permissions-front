@@ -10,7 +10,7 @@
     </div>
     <div class="row py-2">
       <div class="col">
-        <b-button variant="outline-primary">
+        <b-button variant="outline-primary" @click="toggleRequestModal()">
           <b-icon-plus />
           New Request
         </b-button>
@@ -38,7 +38,7 @@
                 <b-button
                   size="sm"
                   variant="danger"
-                  @click="removePermissionAsync(row.id)"
+                  @click="removePermissionAsync(row)"
                 >
                   <b-icon-trash-fill />
                 </b-button>
@@ -52,12 +52,6 @@
             </template>
           </b-table>
         </b-overlay>
-        <b-pagination
-          v-if="totalPages > 1"
-          v-model="currentPage"
-          :total-rows="totalPages"
-          :per-page="pageSize"
-        ></b-pagination>
       </div>
     </div>
   </div>
@@ -72,41 +66,39 @@ export default {
       permissions: [],
       fields: [
         {
-          key: "first_name",
+          key: "employeeName",
         },
         {
-          key: "last_name",
+          key: "employeeLastName",
         },
         {
-          key: "type",
+          label: "Description",
+          key: "permitType.description",
         },
         {
-          key: "date",
+          key: "permitDate",
         },
         {
           key: "actions",
         },
       ],
-      currentPage: 1,
-      totalPages: 1,
-      pageSize: 10,
+     
       isLoading: false,
+      newRequestModalActive: false,
     };
   },
   mounted() {
-    //TODO: Implement Data initial load method e.g.: getPermissionsAsync()
     this.getPermissionsAsync();
   },
   methods: {
-    // TODO: Create async data retrieval function
+    toggleRequestModal(){
+      this.newRequestModalActive = !this.newRequestModalActive;
+    },
     async getPermissionsAsync() {
       this.isLoading = true;
-      await axios("/api/permissions")
+      await axios(`${process.env.VUE_APP_API_ROOT}/api/permit`)
         .then((response) => {
           this.permissions = response.data;
-          this.currentPage = response.page;
-          this.totalPages = response.total;
-          this.pageSize = response.pageSize;
         })
         .catch((error) => {
           console.error(error);
@@ -118,7 +110,7 @@ export default {
     // TODO: Create async row insert function
     async insertPermissionAsync(permission) {
       this.isLoading = true;
-      await axios("/api/permissions", {
+      await axios(`${process.env.VUE_APP_API_ROOT}/api/permit`, {
         method: "POST",
         data: permission,
       })
@@ -152,10 +144,11 @@ export default {
         });
     },
     // TODO: Create async row delete function
-    async removePermissionAsync(id) {
+    async removePermissionAsync(permission) {
       this.isLoading = true;
-      await axios(`/api/permissions/${id}`, {
+      await axios(`${process.env.VUE_APP_API_ROOT}/api/permit/${permission.item.id}`, {
         method: "DELETE",
+        data: permission.item,
       })
         .then((response) => {
           console.log(response);
