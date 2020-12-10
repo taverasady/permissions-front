@@ -31,16 +31,9 @@
                 <b-button
                   size="sm"
                   variant="warning"
-                  @click="showEditModal(row)"
+                  @click="toggleRequestModal(row.item)"
                 >
                   <b-icon-pencil-fill />
-                </b-button>
-                <b-button
-                  size="sm"
-                  variant="danger"
-                  @click="removePermissionAsync(row)"
-                >
-                  <b-icon-trash-fill />
                 </b-button>
               </b-button-group>
             </template>
@@ -54,21 +47,23 @@
         </b-overlay>
       </div>
     </div>
-    <EditModal @updated-permissions="getPermissionsAsync()"/>
+    <PermitModal :permission="selectedPermission" :permit-types="permitTypes" @updated-permissions="getPermissionsAsync()"/>
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import EditModal from '@/components/edit-modal.vue';
+import PermitModal from '@/components/permit-modal.vue';
+import { permissionBase } from "@/utils"
 export default {
   name: "Home",
   components: {
-    EditModal,
+    PermitModal,
   },
   data() {
     return {
       permissions: [],
+      permitTypes: [],
       fields: [
         {
           key: "employeeName",
@@ -87,16 +82,22 @@ export default {
           key: "actions",
         },
       ],
-     
+      selectedPermission: {...permissionBase},
       isLoading: false,
       newRequestModalActive: false,
     };
   },
   mounted() {
     this.getPermissionsAsync();
+    this.getPermissionsTypesAsync();
   },
   methods: {
-    toggleRequestModal(){
+    toggleRequestModal(permission){
+      if (permission) {
+        this.selectedPermission = permission;
+      } else {
+        this.selectedPermission = {...permissionBase};
+      }
       this.$bvModal.show('edit-modal');
     },
     async getPermissionsAsync() {
@@ -112,21 +113,17 @@ export default {
           this.isLoading = false;
         });
     },
-    async removePermissionAsync(permission) {
+    async getPermissionsTypesAsync() {
       this.isLoading = true;
-      await axios(`${process.env.VUE_APP_API_ROOT}/api/permit/${permission.item.id}`, {
-        method: "DELETE",
-        data: permission.item,
-      })
+      await axios(`${process.env.VUE_APP_API_ROOT}/api/permitType`)
         .then((response) => {
-          console.log(response);
+          this.permitTypes = response.data;
         })
         .catch((error) => {
           console.error(error);
         })
         .finally(() => {
           this.isLoading = false;
-          this.getPermissionsAsync();
         });
     },
   },
